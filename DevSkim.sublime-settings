@@ -1,0 +1,53 @@
+// Don't change any setting on this file. If you want to override the default
+// behaviour, change the settings values on your
+// Packages/User/DevSkim.sublime-settings file.
+{
+
+  /* Enable verbose output to console */
+  "debug": false,
+
+  /* Don't analyze files greater than 512kb - set to -1 to disable */
+  "max_size": 524288,
+
+  /* Show all severities */
+  "show_severity": ["critical", "important", "moderate", "low", "defense-in-depth", "informational"],
+
+  /* Mark for the page gutter -- available options dot, circle, cross, or "" */
+  "gutter_mark": "dot",
+
+  /* Stylesheet for popup, from package directory */
+  "style": "css/dark.css",
+
+  /* Show only rules with the given tags, empty means "show all" */
+  "show_only_tags": [],
+
+  /* Sort results by either "severity" or "line_number" */
+  "sort_results_by": "line_number",
+
+  /* Run analysis as soon as a file is opened. */
+  "show_highlights_on_load": true,
+
+  /* Run analysis when the file is saved. */
+  "show_findings_on_save": true,
+
+  /* Run analysis whenever a file is changed. */
+  "show_highlights_on_modified": true,
+
+  /* Enable per-rule suppressions */
+  "allow_suppress_specific_rules": true,
+
+  /* Enable global suppressions */
+  "allow_suppress_all_rules": true,
+
+  /* Allow suppression for specific # of days, or -1 for "permanent" */
+  "suppress_days": [90, 365, -1],
+
+  /* List of rules files to also include. */
+  "custom_rules": [
+  ],
+
+  /* Globally suppress these rules (list of rule IDs, like "DS123456") */
+  "suppress_rules": [
+  ]
+
+}

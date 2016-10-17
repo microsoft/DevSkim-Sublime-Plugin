@@ -1,0 +1,8 @@
+[
+    {
+        "keys": [ "ctrl+shift+d" ],
+        "command": "dev_skim_analyze",
+        "context": [
+        ]
+    }
+]

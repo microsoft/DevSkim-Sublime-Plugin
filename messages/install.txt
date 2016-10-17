@@ -1,0 +1,22 @@
+Welcome to DevSkim
+=====================
+
+DevSkim is a source code linter, specifically designed to flag high-risk
+security vulnerabilities, provide actionable recommendations (including
+"auto-fix" functionality) and time-limited suppressions.
+
+DevSkim comes with a pre-defined set of rules, which can be extended by
+users or organizations.
+
+
+Issues, Questions or Bugs?
+--------------------------
+
+For issues with DevSkim, please open an issue for the plugin project:
+
+    https://github.com/Microsoft/DevSkim-SublimeText/issues
+
+For issues with rules, please open an issue for the rules project:
+
+    https://github.com/Microsoft/DevSkim-Rules/issues
+

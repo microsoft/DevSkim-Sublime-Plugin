@@ -1,0 +1,10 @@
+[
+    {
+        "caption": "DevSkim: Analyze File",
+        "command": "dev_skim_analyze"
+    },
+        {
+        "caption": "DevSkim: Reload Configuration",
+        "command": "dev_skim_reload_rules"
+    }
+]
