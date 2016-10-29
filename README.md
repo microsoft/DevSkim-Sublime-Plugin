@@ -12,7 +12,7 @@ Installation
 ------------
 If using [Package Control](https://packagecontrol.io/) for Sublime Text, simply install the `DevSkim` package.
 
-Alternatively, you can clone the plugin and rules repos directly into your Sublime plugin folder.  For example, for Sublime Text 3 on a Mac this would look something like:
+Alternatively, you can clone the plugin and rules repos directly into your Sublime plugin folder. For example, for Sublime Text 3 on a Mac this would look something like:
 
 ```
 cd ~/"Library/Application Support/Sublime Text 3/Packages"
@@ -23,6 +23,13 @@ git clone --depth 1 https://github.com/Microsoft/DevSkim-Rules.git rules
 And on Windows:
 ```
 cd "%APPDATA%\Sublime Text 3\Packages"
+git clone --depth 1 https://github.com/Microsoft/DevSkim-Sublime-Plugin.git DevSkim
+cd DevSkim
+git clone --depth 1 https://github.com/Microsoft/DevSkim-Rules.git rules
+```
+And on Linux:
+```
+cd ~/.config/sublime-text-3/Packages"
 git clone --depth 1 https://github.com/Microsoft/DevSkim-Sublime-Plugin.git DevSkim
 cd DevSkim
 git clone --depth 1 https://github.com/Microsoft/DevSkim-Rules.git rules
@@ -51,8 +58,6 @@ The below features are available via the keyboard shortcuts shown, or via the Co
 | Feature               | Shortcut        |
 |-----------------------|-----------------|
 | Run DevSkim           | `^D`            |
-
-The
 
 The "format on key" feature is on by default, which formats the current line after typing `;`, `}` or `enter`.
 To disable it, go to `Preferences` -> `Package Settings` -> `DevSkim` -> `Plugin Settings - User`, and add
@@ -100,7 +105,7 @@ apply the rule to, and, optionally, a list of possible code fixes. An example ru
                 "type": "regex_substitute",
                 "name": "Change to SHA-256",
                 "search": "\\bmd5\\(([^\\)]+\\)",
-                "replace": "hash('sha256', \\1)"
+                "replace": "hash('sha256', $1)"
             }
         ]
     }
