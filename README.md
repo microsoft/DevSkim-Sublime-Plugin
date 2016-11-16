@@ -10,58 +10,55 @@ The plugin requires Sublime Text 3 (build >= 3114), and will function on Windows
 
 Installation
 ------------
-If using [Package Control](https://packagecontrol.io/) for Sublime Text, simply install the `DevSkim` package.
 
-Alternatively, you can clone the plugin and rules repos directly into your Sublime plugin folder. For example, for Sublime Text 3 on a Mac this would look something like:
+Clone this repository as well as the [rules](https://github.com/Microsoft/DevSkim-Rules) repo directly into your Sublime Text plugin folder. For example, for Sublime Text 3 on Windows would look something like:
 
+```
+cd "%APPDATA%\"Sublime Text 3\Packages"
+git clone https://github.com/Microsoft/DevSkim-Sublime-Plugin.git DevSkim
+cd DevSkim
+git clone https://github.com/Microsoft/DevSkim-Rules.git rules
+```
+
+And on MacOS:
 ```
 cd ~/"Library/Application Support/Sublime Text 3/Packages"
-git clone --depth 1 https://github.com/Microsoft/DevSkim-Sublime-Plugin.git DevSkim
+git clone https://github.com/Microsoft/DevSkim-Sublime-Plugin.git DevSkim
 cd DevSkim
-git clone --depth 1 https://github.com/Microsoft/DevSkim-Rules.git rules
+git clone https://github.com/Microsoft/DevSkim-Rules.git rules
 ```
-And on Windows:
-```
-cd "%APPDATA%\Sublime Text 3\Packages"
-git clone --depth 1 https://github.com/Microsoft/DevSkim-Sublime-Plugin.git DevSkim
-cd DevSkim
-git clone --depth 1 https://github.com/Microsoft/DevSkim-Rules.git rules
-```
+
 And on Linux:
 ```
-cd ~/.config/sublime-text-3/Packages"
-git clone --depth 1 https://github.com/Microsoft/DevSkim-Sublime-Plugin.git DevSkim
+cd ~/.config/sublime-text-3/Packages
+git clone https://github.com/Microsoft/DevSkim-Sublime-Plugin.git DevSkim
 cd DevSkim
-git clone --depth 1 https://github.com/Microsoft/DevSkim-Rules.git rules
+git clone https://github.com/Microsoft/DevSkim-Rules.git rules
 ```
 
-(`--depth 1` downloads only the current version to reduce the clone size.)
+Note if you are using the portable version of Sublime Text, the location will be different. See http://docs.sublimetext.info/en/latest/basic_concepts.html#the-data-directory for more info.
 
-Note if you are using the portable version of Sublime Text, the location will be different.  (See http://docs.sublimetext.info/en/latest/basic_concepts.html#the-data-directory for more info).
-
-**IMPORTANT** If you already have a package called `DevSkim` installed, either remove this first, or clone this repo to a different folder, else module name resolution can break the plugin.
+**IMPORTANT** If you already have a package called `DevSkim` installed, either remove this first, or clone this repo to a different folder.
 
 Platform support
 ----------------
 #### Operating System:
 
-The plugin has identical behavior across Windows, Mac, and Linux.
+The plugin has identical behavior across Windows, MacOS, and Linux.
 
 #### Sublime Text Version:
 
-The plugin requires [Sublime Text 3](http://www.sublimetext.com/3) build >= 3114.
+The plugin requires [Sublime Text 3](http://www.sublimetext.com/3) builds >= 3114.
 
 Features
 --------
+
 The below features are available via the keyboard shortcuts shown, or via the Command Palette (^ means the `ctrl` or `cmd` keys):
 
 | Feature               | Shortcut        |
 |-----------------------|-----------------|
 | Run DevSkim           | `^D`            |
 
-The "format on key" feature is on by default, which formats the current line after typing `;`, `}` or `enter`.
-To disable it, go to `Preferences` -> `Package Settings` -> `DevSkim` -> `Plugin Settings - User`, and add
-`"typescript_auto_format": false` to the json file.
 
 Rules System
 ------------
