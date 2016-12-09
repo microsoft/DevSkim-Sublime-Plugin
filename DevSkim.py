@@ -271,7 +271,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                         replace = fixit['replace']
                         for k in range(1, 9):
                             replace = replace.replace("${0}".format(k), "\\{0}".format(k))
-                        result = re.sub(search, replace, contents)
+                        result = re.sub(search, replace, contents, flags=re.IGNORECASE)
                         logger.debug("Result of search/replace was [%s]", result)
                         self.view.run_command('replace_text', {
                             'a': self.view.line(region_start).a,
