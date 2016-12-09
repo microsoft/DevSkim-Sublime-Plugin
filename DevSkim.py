@@ -269,6 +269,8 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                     if fixit['type'] == 'regex_substitute':
                         search = fixit['search']
                         replace = fixit['replace']
+                        for k in range(1, 9):
+                            replace = replace.replace("${0}".format(k), "\\{0}".format(k))
                         result = re.sub(search, replace, contents)
                         logger.debug("Result of search/replace was [%s]", result)
                         self.view.run_command('replace_text', {

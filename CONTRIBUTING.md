@@ -2,9 +2,9 @@
 
 ### Before Submitting an Issue
 
-First, please do a search of [open issues](https://github.com/Microsoft/DevSkim-SublimeText/issues) to see
+First, please do a search of [open issues](https://github.com/Microsoft/DevSkim-Sublime-Plugin/issues) to see
 if the issue or feature request has already been filed. Use this
-[query](https://github.com/Microsoft/DevSkim-SublimeText/issues?q=is%3Aopen+is%3Aissue+label%3Afeature-request+sort%3Areactions-%2B1-desc)
+[query](https://github.com/Microsoft/DevSkim-Sublime-Plugin/issues?q=is%3Aopen+is%3Aissue+label%3Afeature-request+sort%3Areactions-%2B1-desc)
 to search for the most popular feature requests.
 
 If you find your issue already exists, make relevant comments and add your
@@ -16,9 +16,9 @@ If you find your issue already exists, make relevant comments and add your
 
 The DevSkim project is distributed across multiple repositories, so try to file the issue against the correct repository:
 
-* [DevSkim-SublimeText](https://github.com/Microsoft/DevSkim-SublimeText/) - Sublime Text Plugin
-* [DevSkim-VSCode](https://github.com/Microsoft/DevSkim-VSCode/) - VSCode Plugin
-* [DevSkim-VisualStudio](https://github.com/Microsoft/DevSkim-VisualStudio/) - Visual Studio Plugin
+* [DevSkim-SublimeText](https://github.com/Microsoft/DevSkim-Sublime-Plugin/) - Sublime Text Plugin
+* [DevSkim-VSCode](https://github.com/Microsoft/DevSkim-VSCode-Plugin/) - VSCode Plugin
+* [DevSkim-VisualStudio](https://github.com/Microsoft/DevSkim-VisualStudio-Plugin/) - Visual Studio Plugin
 * [DevSkim-Rules](https://github.com/Microsoft/DevSkim-Rules/) - Common Rules
 
 If your issue is a question then please ask the question on [Stack Overflow](https://stackoverflow.com/questions/tagged/devskim)
@@ -47,5 +47,5 @@ Don't feel bad if we can't reproduce the issue and ask for more information!
 ## Contributing Fixes
 
 If you are interested in fixing issues and contributing directly to the code base,
-please see the document [How to Contribute](https://github.com/Microsoft/DevSkim-SublimeText/wiki/How-to-Contribute).
+please see the document [How to Contribute](https://github.com/Microsoft/DevSkim-Sublime-Plugin/wiki/How-to-Contribute).
 
