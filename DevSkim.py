@@ -234,7 +234,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
 
     def on_navigate(self, command):
         """Handle navigation events."""
-        global finding_list, rules
+        global finding_list, rules, user_settings
         self.lazy_initialize()
 
         logger.debug("on_navigate(%s)", command)
@@ -281,6 +281,32 @@ class DevSkimEventListener(sublime_plugin.EventListener):
 
                     # Only fix once
                     break
+        elif command.startswith('#add-reviewed'):
+            rule_id, region_start = command.split(',')[1:]
+            cur_line = self.view.line(int(region_start))
+
+            comment = "  DevSkim: reviewed %s on %s " % (rule_id, datetime.datetime.now().strftime("%Y-%m-%d"))
+            username = user_settings.get('manual_reviewer_name', '')
+            if username:
+                comment += "by {0} ".format(username)
+
+            # Add the pragma/comment at the end of the current line
+            self.view.run_command('insert_text', {
+                'a': cur_line.b,
+                'result': comment
+            })
+
+            # Now highlight that new section
+            prev_sel = self.view.sel()
+            self.view.sel().clear()
+            self.view.sel().add(sublime.Region(cur_line.b + 1, cur_line.b + len(comment)))
+
+            # Now make it a block comment
+            self.view.run_command('toggle_comment', {'block': True})
+            self.view.sel().clear()
+            self.view.sel().add_all(prev_sel)
+
+            self.view.hide_popup()
 
         elif command.startswith('#add-suppression'):
             rule_id, region_start, suppress_day = command.split(',')[1:]
@@ -537,11 +563,15 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                                          (target_region.a, suppress_day, suppress_day_str))
 
         guidance.append("<ul>")
-        if user_settings.get('allow_suppress_specific_rules'):
-            guidance.append("<li>Supress this rule for: %s</li>" % (''.join(this_suppression_links)))
-        if user_settings.get('allow_suppress_all_rules'):
-            guidance.append("<li>Supress all rules for: %s</li>" % (''.join(all_suppression_links)))
+        if rule.get('severity') == 'manual-review':
+            guidance.append('<li><a href="#add-reviewed,{0},{1}">Mark finding as reviewed</a></li>'.format(rule.get('id'), target_region.a))
+        else:
+            if user_settings.get('allow_suppress_specific_rules'):
+                guidance.append("<li>Supress this rule for: %s</li>" % (''.join(this_suppression_links)))
+            if user_settings.get('allow_suppress_all_rules'):
+                guidance.append("<li>Supress all rules for: %s</li>" % (''.join(all_suppression_links)))
         guidance.append('</ul>')
+
 
         if rule.get('rule_info'):
             guidance.append('<h4><a href="%s">Learn More...</a></h4>' % rule.get('rule_info'))
@@ -834,7 +864,6 @@ class DevSkimEventListener(sublime_plugin.EventListener):
     def is_suppressed(self, rule, lines):
         """Should the result be suppressed based on the given rule and line content."""
         global user_settings
-        # self.lazy_initialize()
 
         if not rule or not lines:
             return False
@@ -866,6 +895,11 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                     if match.group(1) in ['all', rule.get('id', 'all').lower()]:
                         logger.debug('Ignoring rule [%s] due to unlimited suppression.', rule.get('id'))
                         return True
+
+            if rule.get('severity') == 'manual-review':
+                if re.search(r'reviewed ([^\s]+)\s*(?!\s+on \d{4}-\d{2}-\d{2})', line):
+                    logger.debug('Ignoring rule [%s] due to manual review complete.', rule.get('id'))
+                    return True
 
         return False
 

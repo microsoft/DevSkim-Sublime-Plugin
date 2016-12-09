@@ -10,7 +10,7 @@
   "max_size": 524288,
 
   /* Show all severities */
-  "show_severity": ["critical", "important", "moderate", "low", "defense-in-depth", "informational"],
+  "show_severity": ["critical", "important", "moderate", "low", "defense-in-depth", "informational", "manual-review"],
 
   /* Mark for the page gutter -- available options dot, circle, cross, or "" */
   "gutter_mark": "dot",
@@ -41,6 +41,9 @@
 
   /* Allow suppression for specific # of days, or -1 for "permanent" */
   "suppress_days": [90, 365, -1],
+
+  /* Name to associate with manual code reviews (optional) */
+  "manual_reviewer_name": "miscovet",
 
   /* List of rules files to also include. */
   "custom_rules": [
