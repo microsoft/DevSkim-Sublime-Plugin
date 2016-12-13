@@ -1,7 +1,7 @@
 DevSkim Plugin for Sublime Text
 ===============================
 
-The plugin implements a security linter within the Sublime Text editor, leveraging the rules from the [DevSkim-Rules](https://github.com/Microsoft/DevSkim-Rules) repo. It helps software engineers to write secure code by flagging potentially dangerous calls, and gives in-context advice for remediation.
+The plugin implements a security linter within the Sublime Text editor, leveraging the rules from the [DevSkim](https://github.com/Microsoft/DevSkim) repo. It helps software engineers to write secure code by flagging potentially dangerous calls, and gives in-context advice for remediation.
 
 ![DevSkim Demo](https://github.com/Microsoft/DevSkim-Sublime-Plugin/raw/master/doc/DevSkim-Sublime-Demo-1.gif)
 
