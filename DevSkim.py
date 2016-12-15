@@ -30,7 +30,7 @@ LOG_FORMAT = '%(asctime)-15s: %(levelname)s: %(name)s.%(funcName)s: %(message)s'
 SEVERITY_LIST = ["critical", "important", "moderate", "low",
                  "defense-in-depth", "informational", "manual-review"]
 RULE_DIRECTORY = ['default', 'custom']
-DEVSKIM_RULES_DIR_PREFIX = 'DevSkim/DevSkim-Common/rules/'
+DEVSKIM_RULES_DIR_PREFIX = 'DevSkim-Common/rules/'
 
 # Minimum Sublime Text version we support
 if int(sublime.version()) < MIN_ST_VERSION:
