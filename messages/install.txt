@@ -14,9 +14,9 @@ Issues, Questions or Bugs?
 
 For issues with DevSkim, please open an issue for the plugin project:
 
-    https://github.com/Microsoft/DevSkim-SublimeText/issues
+    https://github.com/Microsoft/DevSkim-Sublime-Plugin/issues
 
-For issues with rules, please open an issue for the rules project:
+For issues with rules, please open an issue for the main DevSkim project:
 
-    https://github.com/Microsoft/DevSkim-Rules/issues
+    https://github.com/Microsoft/DevSkim/issues
 

@@ -167,10 +167,15 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             if not user_settings:
                 logger.warning("Unable to load DevSkim settings.")
                 return
-            css_file = user_settings.get('style', 'css/dark.css')
-            stylesheet_content = sublime.load_resource('Packages/DevSkim/%s' % css_file)
-            stylesheet_content = stylesheet_content.replace('\r\n', '\n')
-            logger.debug("Stylesheet: [%s]", stylesheet_content)
+            css_file = user_settings.get('style', 'dark.css')
+            stylesheets = sublime.find_resources(css_file)
+            if stylesheets:
+                stylesheet_content = sublime.load_resource(stylesheets[0])
+                stylesheet_content = stylesheet_content.replace('\r\n', '\n')
+                logger.debug("Stylesheet: [%s]", stylesheet_content)
+            else:
+                stylesheet_content = ""
+                logger.debug("No stylesheet found.")
 
         if not suppress_days:
             if not user_settings:
@@ -444,7 +449,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             _v = window.extract_variables()
             filename = _v.get('file', '').replace('\\', '/')
             force_analyze = (extension == 'test' and
-                             '/DevSkim/' in filename and
+                             'DevSkim' in filename and
                              '/tests/' in filename)
             result_list = self.execute(file_contents, extension, syntax, show_severity, force_analyze, offset)
             logger.debug("DevSkim retured: [%s]", result_list)

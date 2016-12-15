@@ -16,7 +16,7 @@
   "gutter_mark": "dot",
 
   /* Stylesheet for popup, from package directory */
-  "style": "css/dark.css",
+  "style": "dark.css",
 
   /* Show only rules with the given tags, empty means "show all" */
   "show_only_tags": [],
