@@ -3,6 +3,7 @@ Copyright (c) 2016 Microsoft. All rights reserved.
 Licensed under the MIT License. See LICENSE.txt in the project root for license information.
 
 DevSkim Sublime Text Plugin
+https://github.com/Microsoft/DevSkim-Sublime-Plugin
 """
 
 import datetime
@@ -22,15 +23,14 @@ except:
     import sys
     sys.exit(1)
 
-# Non-configurable settings
+# Non-Configurable Settings
 MIN_ST_VERSION = 3114
 MARK_FLAGS = sublime.DRAW_NO_FILL | sublime.HIDE_ON_MINIMAP
 LOG_FORMAT = '%(asctime)-15s: %(levelname)s: %(name)s.%(funcName)s: %(message)s'
 SEVERITY_LIST = ["critical", "important", "moderate", "low",
-                 "defense-in-depth", "informational"]
-
-PACKAGE_DIR = os.path.join(sublime.packages_path(), os.path.basename(os.path.dirname(__file__)))
+                 "defense-in-depth", "informational", "manual-review"]
 RULE_DIRECTORY = ['default', 'custom']
+DEVSKIM_RULES_DIR_PREFIX = 'DevSkim/DevSkim-Common/rules/'
 
 # Minimum Sublime Text version we support
 if int(sublime.version()) < MIN_ST_VERSION:
@@ -186,7 +186,6 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             console.setFormatter(logging.Formatter(LOG_FORMAT))
 
             if user_settings.get('debug', False):
-                print("set to debug")
                 root_logger.setLevel(logging.DEBUG)
             else:
                 root_logger.setLevel(logging.WARNING)
@@ -607,7 +606,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
         rule_filenames = []
         for filename in json_filenames:
             for _dir in RULE_DIRECTORY:
-                if 'DevSkim/rules/%s' % _dir in filename:
+                if (DEVSKIM_RULES_DIR_PREFIX + _dir) in filename:
                     rule_filenames.append(filename)
 
         # Remove duplicates
@@ -666,10 +665,6 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             rules = list(filter(filter_func, rules))
 
         logger.debug("Loaded %d rules" % len(rules))
-
-        # for rule in rules:
-        #    for pattern in rule.get('patterns'):
-        #        print("%s\t%s\t%s" % (pattern.get('pattern'), rule.get('severity'), rule.get('name')))
 
         return True
 
@@ -861,6 +856,8 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             return "did."
         elif severity == "informational":
             return "info"
+        elif severity == "manual-review":
+            return "rvw."
         return ""
 
     def is_suppressed(self, rule, lines):
