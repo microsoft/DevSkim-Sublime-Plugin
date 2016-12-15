@@ -43,7 +43,7 @@
   "suppress_days": [90, 365, -1],
 
   /* Name to associate with manual code reviews (optional) */
-  "manual_reviewer_name": "miscovet",
+  "manual_reviewer_name": "",
 
   /* List of rules files to also include. */
   "custom_rules": [
