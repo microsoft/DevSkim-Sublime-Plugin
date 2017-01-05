@@ -61,11 +61,11 @@ The plugin requires [Sublime Text 3](http://www.sublimetext.com/3) builds >= 311
 Features
 --------
 
-The below features are available via the keyboard shortcuts shown, or via the Command Palette (^ means the `ctrl` or `cmd` keys):
+The below features are available via the keyboard shortcuts shown, or via the Command Palette (^ means the `ctrl` key):
 
 | Feature               | Shortcut        |
 |-----------------------|-----------------|
-| Run DevSkim           | `^D`            |
+| Run DevSkim           | `^G`            |
 
 
 Rules System
