@@ -1,5 +1,5 @@
 Welcome to DevSkim
-=====================
+==================
 
 DevSkim is a source code linter, specifically designed to flag high-risk
 security vulnerabilities, provide actionable recommendations (including

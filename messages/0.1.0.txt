@@ -1,0 +1,5 @@
+DevSkim 0.1.0
+==============
+
+2016-12-14 - Initial public preview release of the DevSkim Sublime Text plugin.
+

@@ -1,0 +1,6 @@
+DevSkim 0.2.0
+==============
+
+2017-01-04 - Minor improvements to applicability loading,
+             plus a few minor bug fixes.
+
