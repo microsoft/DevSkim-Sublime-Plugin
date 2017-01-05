@@ -1,6 +1,6 @@
 [
     {
-        "keys": [ "ctrl+shift+d" ],
+        "keys": [ "ctrl+shift+g" ],
         "command": "dev_skim_analyze",
         "context": [
         ]
