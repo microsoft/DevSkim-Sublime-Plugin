@@ -15,7 +15,7 @@
               {
                 "command": "open_file",
                 "args": {
-                  "file": "${packages}/DevSkim/DevSkim.sublime-settings"
+                  "file": "${packages}/DevSkim-Sublime-Plugin/DevSkim.sublime-settings"
                 },
                 "caption": "Settings – Default"
               },
@@ -25,6 +25,31 @@
                   "file": "${packages}/User/DevSkim.sublime-settings"
                 },
                 "caption": "Settings – User"
+              },
+              { "caption": "-" },
+              {
+                  "command": "open_file",
+                  "args": {
+                      "file": "${packages}/DevSkim/Default (OSX).sublime-keymap",
+                      "platform": "OSX"
+                  },
+                  "caption": "Key Bindings – Default"
+              },
+              {
+                  "command": "open_file",
+                  "args": {
+                      "file": "${packages}/DevSkim/Default (Linux).sublime-keymap",
+                      "platform": "Linux"
+                  },
+                  "caption": "Key Bindings – Default"
+              },
+              {
+                  "command": "open_file",
+                  "args": {
+                      "file": "${packages}/DevSkim/Default (Windows).sublime-keymap",
+                      "platform": "Windows"
+                  },
+                  "caption": "Key Bindings – Default"
               }
             ]
           }
