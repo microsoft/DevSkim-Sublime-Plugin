@@ -58,66 +58,29 @@ applies_to_ext_mapping_initialized = False
 # This map is updated to include runtime syntax files, so this is just
 # a starting point.
 applies_to_ext_mapping = {
-    "csharp": {
-        "syntax": ["Packages/C#/C#.sublime-syntax"],
-        "extensions": ["cs"]
-    },
     "aspnet": {
         "syntax": [],
         "extensions": ["aspx"]
-    },
-    "python": {
-        "syntax": ["Packages/Python/Python.sublime-syntax"],
-        "extensions": ["py"]
-    },
-    "c": {
-        "syntax": ["Packages/C++/C.sublime-syntax"],
-        "extensions": ["c", "h"]
-    },
-    "cpp": {
-        "syntax": ["Packages/C++/C++.sublime-syntax"],
-        "extensions": ["c", "h", "cpp", "hpp"]
-    },
-    "javascript": {
-        "syntax": ["Packages/JavaScript/JavaScript.sublime-syntax"],
-        "extensions": ["js"]
-    },
-    "ruby": {
-        "syntax": ["Packages/Ruby/Ruby.sublime-syntax"],
-        "extensions": ["rb", "erb"]
-    },
-    "java": {
-        "syntax": ["Packages/Java/Java.sublime-syntax"],
-        "extensions": ["java"]
-    },
-    "php": {
-        "syntax": ["Packages/PHP/PHP.sublime-syntax"],
-        "extensions": ["php"]
-    },
-    "objective-c": {
-        "syntax": ["Packages/Objective-C/Objective-C.sublime-syntax"],
-        "extensions": ["m", "mm", "h", "c"]
-    },
-    "ios": {
-        "syntax": ["Packages/Objective-C/Objective-C.sublime-syntax"],
-        "extensions": ["m", "mm", "h", "c"]
-    },
-    "swift": {
-        "syntax": ["Packages/Swift/Swift.sublime-syntax"],
-        "extensions": ["swift"]
-    },
-    "java": {
-        "syntax": ["Packages/Java/Java.sublime-syntax"],
-        "extensions": ["java"]
     },
     "powershell": {
         "syntax": ["Packages/PowerShell/PowerShell.sublime-syntax"],
         "extensions": ["ps1"]
     },
+    "ruby": {
+        "syntax": [],
+        "extensions": ["erb"]
+    },
     "swift": {
         "syntax": ["Packages/Swift/Swift.sublime-syntax"],
         "extensions": ["swift"]
     }
+}
+applies_to_ext_alias = {
+    "c": "c++",
+    "cpp": "c++",
+    "csharp": "c#",
+    "ios": "objective-c++",
+    "objective-c": "objective-c++"
 }
 
 # Currently marked regions
@@ -675,37 +638,43 @@ class DevSkimEventListener(sublime_plugin.EventListener):
 
     def load_syntax_mapping(self):
         """Load syntax content from various installed packages."""
-        global applies_to_ext_mapping
+        global applies_to_ext_mapping, applies_to_ext_alias
 
         logger.debug('DevSkimEngine.load_syntax_mapping()')
 
-        for k, v in applies_to_ext_mapping.items():
-            applies_to_ext_mapping[k]['syntax'] = \
-                set(applies_to_ext_mapping[k]['syntax'])
-            applies_to_ext_mapping[k]['extensions'] = \
-                set(applies_to_ext_mapping[k]['extensions'])
+        def _convert_mapping_to_sets():
+            for k, v in applies_to_ext_mapping.items():
+                applies_to_ext_mapping[k]['syntax'] = \
+                    set(applies_to_ext_mapping[k]['syntax'])
+                applies_to_ext_mapping[k]['extensions'] = \
+                    set(applies_to_ext_mapping[k]['extensions'])
+
+        _convert_mapping_to_sets()
 
         # Iterate through all syntax files
         for filename in sublime.find_resources("*.sublime-syntax"):
             # Load the contents
             syntax_file = sublime.load_resource(filename)
+            logger.debug("Loading syntax: {0}".format(filename))
 
             applies_to_name = None
-            for k, v in applies_to_ext_mapping.items():
-                for syntax in v.get('syntax', []):
-                    if syntax == filename:
-                        applies_to_name = k
-                        break
-
-            if not applies_to_name:
-                continue        # We need to have these defined first.
 
             # Look for all extensions
             in_file_extensions = False
 
             for line in syntax_file.splitlines():
-                # Clean off wittepsace
+                # Clean off whitepsace
                 line = line.strip()
+
+                name_match = re.match(r'name: (.*)', line)
+                if name_match:
+                    applies_to_name = name_match.group(1).replace("\"", "").lower().strip()
+                    if applies_to_name not in applies_to_ext_mapping:
+                        applies_to_ext_mapping[applies_to_name] = {
+                            'syntax': set([filename]),
+                            'extensions': set()
+                        }
+                    continue
 
                 # Are we entering?
                 if line == 'file_extensions:':
@@ -717,32 +686,51 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                     if line.startswith('- '):
                         # Add the extension to the mapping
                         extension = line.replace("- ", "").strip()
+                        logger.debug("Added additional extension: {0}".format(extension))
                         applies_to_ext_mapping[applies_to_name]['extensions'].add(extension)
                     else:
                         in_file_extensions = False
                         break
+
+        _convert_mapping_to_sets()
+
+        # Copy over alias'ed keys (e.g. "csharp" => "c#")
+        for k, v in applies_to_ext_alias.items():
+            if k not in applies_to_ext_mapping:
+                applies_to_ext_mapping[k] = {
+                    'syntax': set(),
+                    'extensions': set()
+                }
+            applies_to_ext_mapping[k]['syntax'] |= applies_to_ext_mapping[v]['syntax']
+            applies_to_ext_mapping[k]['extensions'] |= applies_to_ext_mapping[v]['extensions']
+
 
     def execute(self, file_contents, extension=None, syntax=None,
                 severities=None, force_analyze=False, offset=0):
         """Execute all of the rules against a given string of text."""
         global rules, applies_to_ext_mapping
 
-        logger.debug("execute([len=%d], [%s], [%s], [%s], [%d]" %
+        logger.debug("execute([len=%d], [ext=%s], [syntax=%s], [force=%s], [offset=%d])" %
                      (len(file_contents), extension, syntax, force_analyze, offset))
 
         if not file_contents:
             return []
 
-        syntax_types = set([])   # Example: ["csharp"], from the file itself
+        syntax_types = []   # Example: ["csharp"], from the file itself
 
         # TODO Cache this elsewhere, silly to do every time, I think.
         for k, v in applies_to_ext_mapping.items():
-            if (v.get('syntax', None) == syntax or
+            if (syntax in v.get('syntax', []) or
                     extension in v.get('extensions', [])):
-                syntax_types.add(k)
+                k = k.replace("\"", "")     # Some names are quoted
+                syntax_types.append(k)
         result_list = []
+        syntax_types = list(set(syntax_types))
+
+        logger.debug("Loaded syntax types: {0}".format(syntax_types))
 
         for rule in rules:
+            logger.debug('Rule: {0}'.format(rule.get('id', None)))
 
             # Don't even scan for rules that we don't care about
             if not force_analyze and rule.get('severity', 'critical') not in severities:
@@ -805,6 +793,8 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                         # Default
                         flags = re.IGNORECASE | re.MULTILINE
 
+                    logger.debug('Searching for {0} in contents.'.format(pattern_str))
+
                     for match in re.finditer(pattern_str, file_contents, flags):
 
                         if not match:
@@ -840,6 +830,9 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                             'pattern': orig_pattern_str,
                             'scope_list': scope_list
                         })
+            else:
+                logger.debug("Not running rule check [force={0}, rule_applies={1}, syntax={2}, ext={3},]".format(
+                    force_analyze, rule_applies_to, set(rule_applies_to) & set(syntax_types), extension))
 
         return result_list
 
