@@ -1,7 +1,8 @@
 DevSkim Plugin for Sublime Text
 ===============================
 
-The plugin implements a security linter within the Sublime Text editor, leveraging the rules from the [DevSkim](https://github.com/Microsoft/DevSkim) repo. It helps software engineers to write secure code by flagging potentially dangerous calls, and gives in-context advice for remediation.
+The plugin implements a security linter within the Sublime Text editor, leveraging the rules from the [DevSkim](https://github.com/Microsoft/DevSkim)
+repo. It helps software engineers to write secure code by flagging potentially dangerous calls, and gives in-context advice for remediation.
 
 ### PUBLIC PREVIEW
 
@@ -19,37 +20,45 @@ The plugin requires Sublime Text 3 (build >= 3114), and will function on Windows
 Installation
 ------------
 
-Clone this repository as well as the [rules](https://github.com/Microsoft/DevSkim-Rules) repo directly into your Sublime Text plugin folder. For example, for Sublime Text 3 on Windows would look something like:
+Install this plugin using [Package Control](https://packagecontrol.io/) from Sublime Text. The package name
+is `DevSkim`.
+
+Alternatively, you can clone this repository into your Sublime Text "Packages" folder. For example, under Windows:
 
 ```
 cd "%APPDATA%\"Sublime Text 3\Packages"
 git clone https://github.com/Microsoft/DevSkim-Sublime-Plugin.git DevSkim
-cd DevSkim
-git clone https://github.com/Microsoft/DevSkim-Rules.git rules
 ```
 
-And on MacOS:
+MacOS:
 ```
 cd ~/"Library/Application Support/Sublime Text 3/Packages"
 git clone https://github.com/Microsoft/DevSkim-Sublime-Plugin.git DevSkim
-cd DevSkim
-git clone https://github.com/Microsoft/DevSkim-Rules.git rules
 ```
 
-And on Linux:
+Linux:
 ```
 cd ~/.config/sublime-text-3/Packages
 git clone https://github.com/Microsoft/DevSkim-Sublime-Plugin.git DevSkim
-cd DevSkim
-git clone https://github.com/Microsoft/DevSkim-Rules.git rules
 ```
 
-Note if you are using the portable version of Sublime Text, the location will be different. See http://docs.sublimetext.info/en/latest/basic_concepts.html#the-data-directory for more info.
+Note if you are using the portable version of Sublime Text, the location will be different. See the
+[Sublime Text docuemntation](http://docs.sublimetext.info/en/latest/basic_concepts.html#the-data-directory) for more information.
 
 **IMPORTANT** If you already have a package called `DevSkim` installed, either remove this first, or clone this repo to a different folder.
 
+Using DevSkim
+-------------
+
+By default, DevSkim will run as you type, highlighting code that fails a rule. If you click on a highlighted bit of code, you should
+see the rule in the status bar.
+
+You can run a full scan by pressing Ctrl-Shift-g, which will result in a popup showing all findings for the file. You can also choose
+`DevSkim: Analyze File` from the Command Palette.
+
 Platform support
 ----------------
+
 #### Operating System:
 
 The plugin has identical behavior across Windows, MacOS, and Linux.
@@ -57,15 +66,6 @@ The plugin has identical behavior across Windows, MacOS, and Linux.
 #### Sublime Text Version:
 
 The plugin requires [Sublime Text 3](http://www.sublimetext.com/3) builds >= 3114.
-
-Features
---------
-
-The below features are available via the keyboard shortcuts shown, or via the Command Palette (^ means the `ctrl` key):
-
-| Feature               | Shortcut        |
-|-----------------------|-----------------|
-| Run DevSkim           | `^G`            |
 
 
 Rules System
@@ -75,8 +75,8 @@ The plugin supports both built-in and custom rules:
 
 #### Built-In Rules
 
-Built-in rules come from the [DevSkim-Rules](https://github.com/Microsoft/DevSkim-Rules.git) repo, and should be stored
-in the `rules` directory within the DevSkim directory.
+Built-in rules come from the [DevSkim](https://github.com/Microsoft/DevSkim) repository, and should be stored
+in the `DevSkim-Common/rules` directory within the DevSkim package directory.
 
 Rules are organized by subdirectory and file, but are flattened internally when loaded.
 
@@ -118,9 +118,9 @@ apply the rule to, and, optionally, a list of possible code fixes. An example ru
 ```
 
 Reporting Issues
--------
+----------------
 Please see [CONTRIBUTING](https://github.com/Microsoft/DevSkim-Sublime-Plugin/blob/master/CONTRIBUTING.md) for information on reporting issues and contributing code.
 
 Tips and Known Issues
-----
+---------------------
 See tips and known issues in the [wiki page](https://github.com/Microsoft/DevSkim-Sublime-Plugin/wiki/Tips-and-Known-Issues).
