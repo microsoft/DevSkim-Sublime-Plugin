@@ -287,7 +287,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             except Exception as msg:
                 suppress_day = -1
 
-            if suppress_day == -1:
+            if suppress_day == -1:  # Permanent suppression
                 comment = "  DevSkim: ignore %s " % rule_id
             else:
                 until_day = datetime.date.today() + datetime.timedelta(days=suppress_day)
@@ -876,22 +876,33 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                 continue
 
             if user_settings.get('allow_suppress_specific_rules'):
-                for match in re.finditer(r'ignore ([^\s]+)\s+until (\d{4}-\d{2}-\d{2})', line):
-                    if match.group(1) in ['all', rule.get('id', 'all').lower()]:
+                for match in re.finditer(r'ignore ([^\s]+)\s*(?!\s+until (\d{4}-\d{2}-\d{2}))', line):
+                    if match.group(1).lower() == rule.get('id').lower():
                         suppress_until = match.group(2)
+                        if suppress_until is None:
+                            # Permanent suppression of this rule
+                            return True
                         try:
                             suppress_until = datetime.datetime.strptime(suppress_until, '%Y-%m-%d')
                             if datetime.date.today() < suppress_until.date():
                                 logger.debug('Ignoring rule [%s] due to limited suppression.', rule.get('id'))
                                 return True
                         except Exception as msg:
-                            logger.debug("Error parsing suppression date: %s", msg)
+                            logger.debug("Error parsing suppression date 1: %s", msg)
 
-            if not user_settings.get('allow_suppress_all_rules'):
-                for match in re.finditer(r'ignore ([^\s]+)\s*(?!\s+until \d{4}-\d{2}-\d{2})', line):
-                    if match.group(1) in ['all', rule.get('id', 'all').lower()]:
-                        logger.debug('Ignoring rule [%s] due to unlimited suppression.', rule.get('id'))
+            if user_settings.get('allow_suppress_all_rules'):
+                for match in re.finditer(r'ignore all\s*(?!\s+until (\d{4}-\d{2}-\d{2}))', line):
+                    suppress_until = match.group(1)
+                    if suppress_until is None:
+                        # Permanent suppression of all rules
                         return True
+                    try:
+                        suppress_until = datetime.datetime.strptime(suppress_until, '%Y-%m-%d')
+                        if datetime.date.today() < suppress_until.date():
+                            logger.debug('Ignoring rule [%s] due to global suppression.', rule.get('id'))
+                            return True
+                    except Exception as msg:
+                        logger.debug("Error parsing suppression date 2: %s", msg)
 
             if rule.get('severity') == 'manual-review':
                 if re.search(r'reviewed ([^\s]+)\s*(?!\s+on \d{4}-\d{2}-\d{2})', line):
