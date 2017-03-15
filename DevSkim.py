@@ -216,41 +216,56 @@ class DevSkimEventListener(sublime_plugin.EventListener):
 
         # Special commands, intercept and perform the fix
         if command.startswith('#fixit'):
-            rule_id, fixid = command.split(',')[1:]
+            rule_id, fixid, region_start, region_end = command.split(',')[1:]
             fixid = int(fixid)
+            region_start = int(region_start)
+            region_end = int(region_end)
 
             for finding in finding_list:
                 rule = finding.get('rule')
 
-                if rule.get('id') == rule_id:
+                # We're only searching for a specific rule id
+                if rule.get('id') != rule_id:
+                    continue
 
-                    region_start = finding.get("match_region").begin()
-                    contents = self.view.substr(self.view.line(region_start))
+                contents = self.view.substr(sublime.Region(region_start, region_end))
+                logger.debug("Applying fixit to contents [{0}]".format(contents))
 
-                    fixit = rule.get('fix_it')
-                    if not fixit or fixid >= len(fixit):
-                        continue
+                fixit = rule.get('fix_it')
+                if not fixit or fixid >= len(fixit):
+                    continue
 
-                    fixit = fixit[fixid]
-                    if fixit['type'] == 'regex-substitute':
-                        search = fixit['search']
-                        replace = fixit['replace']
-                        for k in range(1, 9):
-                            replace = replace.replace("${0}".format(k), "\\{0}".format(k))
-                        result = re.sub(search, replace, contents, flags=re.IGNORECASE)
-                        logger.debug("Result of search/replace was [%s]", result)
-                        self.view.run_command('replace_text', {
-                            'a': self.view.line(region_start).a,
-                            'b': self.view.line(region_start).b,
-                            'result': result
-                        })
+                fixit = fixit[fixid]
+                if not fixit:
+                    logger.warn("Tried to apply fixit #{0}, but was not found in dict.".format(fixid))
+                    continue
 
-                    self.view.hide_popup()
-                    self.clear_regions(self.view)
-                    self.view.sel().clear()
+                if fixit['type'] == 'regex-substitute':
+                    search = fixit.get('search')
+                    replace = fixit.get('replace')
+                    flags = self.re_modifiers_to_flags(fixit.get('modifiers', []))
 
-                    # Only fix once
-                    break
+                    for k in range(1, 9):
+                        replace = replace.replace("${0}".format(k), "\\{0}".format(k))
+
+                    result = re.sub(search, replace, contents, flags=flags)
+                    logger.debug("Result of search/replace was [%s]", result)
+
+                    self.view.replace
+                    self.view.run_command('replace_text', {
+                        'a': region_start,
+                        'b': region_end,
+                        'result': result
+                    })
+                else:
+                    logger.warn("Invalid fixit type found, {0}".format(fixit['type']))
+
+                self.view.hide_popup()
+                self.clear_regions(self.view)
+                self.view.sel().clear()
+
+                # Only fix once
+                break
 
         elif command.startswith('#add-reviewed'):
             rule_id, region_start = command.split(',')[1:]
@@ -416,7 +431,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             force_analyze = (extension == 'test' and
                              'DevSkim' in filename and
                              '/tests/' in filename)
-            result_list = self.execute(file_contents, filename, extension, syntax, 
+            result_list = self.execute(file_contents, filename, extension, syntax,
                                        show_severity, force_analyze, offset)
             logger.debug("DevSkim retured: [%s]", result_list)
         except Exception as ex:
@@ -520,8 +535,8 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             guidance.append('<h3>Options:</h3>')
             guidance.append("<ul>")
             for fixid, fix in enumerate(rule.get('fix_it')):
-                guidance.append('<li>Auto-Fix: <a href="#fixit,%s,%d">%s</a></li>' %
-                                (rule.get('id'), fixid, fix.get('name')))
+                guidance.append('<li>Auto-Fix: <a href="#fixit,%s,%d,%d,%d">%s</a></li>' %
+                                (rule.get('id'), fixid, target_region.begin(), target_region.end(), fix.get('name')))
             guidance.append("</ul>")
 
         # Supression links
@@ -708,6 +723,26 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             applies_to_ext_mapping[k]['extensions'] |= applies_to_ext_mapping[v]['extensions']
 
 
+    def re_modifiers_to_flags(self, modifiers, default=re.IGNORECASE | re.MULTILINE):
+        """Convert modifier flags from rules to a regex flag value."""
+        flags = 0
+        if modifiers:
+            modifiers = map(lambda s: s.lower(), modifiers)
+
+            # The rule here is that if a modifier is passed,
+            # then that's the modifier used. Otherwise, we do
+            # IGNORECASE | MULTILINE.
+            if 'dotall' in modifiers:
+                flags |= re.DOTALL
+            if 'multiline' in modifiers:
+                flags |= re.MULTILINE
+            if 'ignorecase' in modifiers:
+                flags |= re.IGNORECASE
+        else:
+            flags = default
+
+        return flags
+
     def execute(self, file_contents, filename=None, extension=None, syntax=None,
                 severities=None, force_analyze=False, offset=0):
         """Execute all of the rules against a given string of text."""
@@ -778,23 +813,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
 
                     scope_list = pattern_dict.get('subtype', [])
 
-                    modifiers = pattern_dict.get('modifiers', [])
-                    flags = 0
-                    if modifiers:
-                        modifiers = map(lambda s: s.lower(), modifiers)
-
-                        # The rule here is that if a modifier is passed,
-                        # then that's the modifier used. Otherwise, we do
-                        # IGNORECASE | MULTILINE.
-                        if 'dotall' in modifiers:
-                            flags |= re.DOTALL
-                        if 'multiline' in modifiers:
-                            flags |= re.MULTILINE
-                        if 'ignorecase' in modifiers:
-                            flags |= re.IGNORECASE
-                    else:
-                        # Default
-                        flags = re.IGNORECASE | re.MULTILINE
+                    flags = self.re_modifiers_to_flags(pattern_dict.get('modifiers', []))
 
                     logger.debug('Searching for {0} in contents.'.format(pattern_str))
 
