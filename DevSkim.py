@@ -50,7 +50,6 @@ user_settings = None
 # Global objects, used for caching
 rules = []
 
-
 # Was the applies_to_ext_mapping already loaded from syntax files?
 applies_to_ext_mapping_initialized = False
 
@@ -233,7 +232,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                         continue
 
                     fixit = fixit[fixid]
-                    if fixit['type'] == 'regex_substitute':
+                    if fixit['type'] == 'regex-substitute':
                         search = fixit['search']
                         replace = fixit['replace']
                         for k in range(1, 9):
@@ -247,9 +246,11 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                         })
 
                     self.view.hide_popup()
-
+                    self.clear_regions(self.view)
+                    
                     # Only fix once
                     break
+                    
         elif command.startswith('#add-reviewed'):
             rule_id, region_start = command.split(',')[1:]
             cur_line = self.view.line(int(region_start))
@@ -619,7 +620,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                 logger.warning("Error suppressing rules for %s: %s" %
                                (rule_id, msg))
 
-        # Only include active rules
+        # Only include active rules -- if 'active' is not specified, assume True
         rules = list(filter(lambda x: x.get('active', True), rules))
 
         # Filter by tags, if specified, convert all to lowercase
@@ -766,7 +767,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                         pattern_str = r'\b%s\b' % re.escape(pattern_str)
                     elif pattern_dict.get('type') == 'regex':
                         pass
-                    elif pattern_dict.get('type') == 'regex_word':
+                    elif pattern_dict.get('type') == 'regex-word':
                         pattern_str = r'\b%s\b' % pattern_str
                     else:
                         logger.warning("Invalid pattern type [%s] found." %
