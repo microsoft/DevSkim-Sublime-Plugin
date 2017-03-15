@@ -247,6 +247,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
 
                     self.view.hide_popup()
                     self.clear_regions(self.view)
+                    self.view.sel().clear()
                     
                     # Only fix once
                     break
