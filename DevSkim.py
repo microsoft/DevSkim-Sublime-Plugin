@@ -248,10 +248,10 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                     self.view.hide_popup()
                     self.clear_regions(self.view)
                     self.view.sel().clear()
-                    
+
                     # Only fix once
                     break
-                    
+
         elif command.startswith('#add-reviewed'):
             rule_id, region_start = command.split(',')[1:]
             cur_line = self.view.line(int(region_start))
@@ -416,7 +416,8 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             force_analyze = (extension == 'test' and
                              'DevSkim' in filename and
                              '/tests/' in filename)
-            result_list = self.execute(file_contents, extension, syntax, show_severity, force_analyze, offset)
+            result_list = self.execute(file_contents, filename, extension, syntax, 
+                                       show_severity, force_analyze, offset)
             logger.debug("DevSkim retured: [%s]", result_list)
         except Exception as ex:
             logger.warning("Error executing DevSkim: [%s]", ex)
@@ -707,13 +708,13 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             applies_to_ext_mapping[k]['extensions'] |= applies_to_ext_mapping[v]['extensions']
 
 
-    def execute(self, file_contents, extension=None, syntax=None,
+    def execute(self, file_contents, filename=None, extension=None, syntax=None,
                 severities=None, force_analyze=False, offset=0):
         """Execute all of the rules against a given string of text."""
         global rules, applies_to_ext_mapping
 
-        logger.debug("execute([len=%d], [ext=%s], [syntax=%s], [force=%s], [offset=%d])" %
-                     (len(file_contents), extension, syntax, force_analyze, offset))
+        logger.debug("execute([len=%d], [name=%s], [ext=%s], [syntax=%s], [force=%s], [offset=%d])" %
+                     (len(file_contents), filename, extension, syntax, force_analyze, offset))
 
         if not file_contents:
             return []

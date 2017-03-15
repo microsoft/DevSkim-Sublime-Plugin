@@ -2,7 +2,7 @@ DevSkim Plugin for Sublime Text
 ===============================
 
 The plugin implements a security linter within the Sublime Text editor, leveraging the rules from the [DevSkim](https://github.com/Microsoft/DevSkim)
-repo. It helps software engineers to write secure code by flagging potentially dangerous calls, and gives in-context advice for remediation.
+repository. It helps software engineers to write secure code by flagging potentially dangerous calls, and gives in-context advice for remediation.
 
 ### PUBLIC PREVIEW
 
@@ -43,14 +43,14 @@ git clone https://github.com/Microsoft/DevSkim-Sublime-Plugin.git DevSkim
 ```
 
 Note if you are using the portable version of Sublime Text, the location will be different. See the
-[Sublime Text docuemntation](http://docs.sublimetext.info/en/latest/basic_concepts.html#the-data-directory) for more information.
+[Sublime Text documentation](http://docs.sublimetext.info/en/latest/basic_concepts.html#the-data-directory) for more information.
 
 **IMPORTANT** If you already have a package called `DevSkim` installed, either remove this first, or clone this repo to a different folder.
 
 Using DevSkim
 -------------
 
-By default, DevSkim will run as you type, highlighting code that fails a rule. If you click on a highlighted bit of code, you should
+By default, DevSkim will run as you type, highlighting code that fails a rule. If you click on a highlighted bit of code, you will
 see the rule in the status bar.
 
 You can run a full scan by pressing Ctrl-Shift-g, which will result in a popup showing all findings for the file. You can also choose
@@ -67,6 +67,11 @@ The plugin has identical behavior across Windows, MacOS, and Linux.
 
 The plugin requires [Sublime Text 3](http://www.sublimetext.com/3) builds >= 3114.
 
+Settings
+--------
+You can customize how DevSkim works through the `Settings -- User` menu item.
+If you change any settings, you should reload the DevSkim configuration, either
+by restarting Sublime Text or by running the command `DevSkim: Reload Configuration`.
 
 Rules System
 ------------
@@ -81,41 +86,10 @@ in the `DevSkim-Common/rules` directory within the DevSkim package directory.
 Rules are organized by subdirectory and file, but are flattened internally when loaded.
 
 Each rule contains a set of patterns (strings and regular expressions) to match, a list of file types to
-apply the rule to, and, optionally, a list of possible code fixes. An example rule is shown below:
+apply the rule to, and, optionally, a list of possible code fixes.
 
-```
-[
-    {
-        "id": "DS126858",
-        "name": "Weak/Broken Hash Algorithm",
-        "active": true,
-        "tags": [
-            "Cryptography.BannedHashAlgorithm"
-        ],
-        "severity": "critical",
-        "description": "A weak or broken hash algorithm was detected.",
-        "replacement": "Consider switching to use SHA-256 or SHA-512 instead.",
-        "rule_info": "https://github.com/microsoft/devskim/guidance/DS126858.md",
-        "applies_to": [
-            "$PHP"
-        ],
-        "patterns": [
-            {
-                "pattern": "md5(",
-                "type": "string"
-            },
-        ],
-        "fix_it": [
-            {
-                "type": "regex_substitute",
-                "name": "Change to SHA-256",
-                "search": "\\bmd5\\(([^\\)]+\\)",
-                "replace": "hash('sha256', $1)"
-            }
-        ]
-    }
-]
-```
+Information how writing rules can be found at
+[Writing-Rules](https://github.com/Microsoft/DevSkim/wiki/Writing-Rules)
 
 Reporting Issues
 ----------------
