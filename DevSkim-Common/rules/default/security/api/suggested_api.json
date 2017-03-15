@@ -2,7 +2,6 @@
     {
         "id": "DS161085",
         "name": "Problematic C function detected (malloc)",
-        "active": true,
         "tags": [
             "API.DangerousAPI.ProblematicFunction"
         ],
@@ -17,15 +16,15 @@
         "rule_info": "https://github.com/Microsoft/DevSkim/blob/master/guidance/DS161085.md",
         "patterns": [
             {
-                "pattern": "\\bmalloc\\(([^,\\)]+)\\)",
+                "pattern": "\\bmalloc\\s*\\(([^,\\)]+)\\)",
                 "type": "regex"
             }
         ],
         "fix_it": [
             {
-                "type": "regex_substitute",
+                "type": "regex-substitute",
                 "name": "Change to calloc ",
-                "search": "\\bmalloc\\(([^,\\)]+)\\)",
+                "search": "\\bmalloc\\s*\\(([^,\\)]+)\\)",
                 "replace": "calloc(<number of elements>, <size of each element>)"
             }
         ]
@@ -33,7 +32,6 @@
 {
         "id": "DS121708",
         "name": "Problematic C function detected (memcpy)",
-        "active": true,
         "tags": [
             "API.DangerousAPI.BannedFunction"
         ],
@@ -48,7 +46,7 @@
         "rule_info": "https://github.com/Microsoft/DevSkim/blob/master/guidance/DS121708.md",
         "patterns": [
             {
-                "pattern": "\\bmemcpy\\(([^,]+),([^,]+),([^,\\)]+)\\)",
+                "pattern": "\\bmemcpy\\s*\\(([^,]+),([^,]+),([^,\\)]+)\\)",
                 "type": "regex",
                 "subtype": [
                     "function-call"
@@ -57,9 +55,9 @@
         ],
         "fix_it": [
             {
-                "type": "regex_substitute",
+                "type": "regex-substitute",
                 "name": "Change to memcpy_s (Recommended for VC++)",
-                "search": "\\bmemcpy\\(([^,]+),([^,]+),([^,\\)]+)\\)",
+                "search": "\\bmemcpy\\s*\\(([^,]+),([^,]+),([^,\\)]+)\\)",
                 "replace": "memcpy_s($1, <size of $1>, $2, $3)"
             }
         ]
