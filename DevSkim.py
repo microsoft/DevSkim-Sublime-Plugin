@@ -342,6 +342,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                 self.analyze_current_view(view, show_popup=False, single_line=True)
             except Exception as msg:
                 logger.warning("Error analyzing current view: %s", msg)
+                traceback.print_exc()
 
     def on_load_async(self, view):
         """Handle asynchronous loading event."""
@@ -353,6 +354,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                 self.analyze_current_view(view, show_popup=False)
             except Exception as msg:
                 logger.warning("Error analyzing current view: %s", msg)
+                traceback.print_exc()
 
     def on_post_save_async(self, view):
         """Handle post-save events."""
@@ -366,6 +368,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                 self.analyze_current_view(view)
             except Exception as msg:
                 logger.warning("Error analyzing current view: %s", msg)
+                traceback.print_exc()
 
     def analyze_current_view(self, view, show_popup=True, single_line=False):
         """Kick off the analysis."""
@@ -1048,6 +1051,7 @@ class DevSkimAnalyzeCommand(sublime_plugin.TextCommand):
             devskim_event_listener.analyze_current_view(self.view)
         except Exception as msg:
             logger.warning("Error analyzing current view: %s" % msg)
+            traceback.print_exc()
 
 
 class DevSkimReloadRulesCommand(sublime_plugin.TextCommand):
