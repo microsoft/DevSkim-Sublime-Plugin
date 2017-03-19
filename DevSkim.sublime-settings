@@ -24,6 +24,13 @@
   /* Sort results by either "severity" or "line_number" */
   "sort_results_by": "line_number",
 
+  /* Ignore files specified in .gitignore */
+  "ignore_from_gitignore": true,
+  
+  /* Ignore additional files, each is a regular expression, escaped for JSON */
+  "ignore_files": [
+  ],
+  
   /* Run analysis as soon as a file is opened. */
   "show_highlights_on_load": true,
 
@@ -52,5 +59,4 @@
   /* Globally suppress these rules (list of rule IDs, like "DS123456") */
   "suppress_rules": [
   ]
-
 }

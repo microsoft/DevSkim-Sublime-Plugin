@@ -12,6 +12,8 @@ import logging
 import re
 import time
 import os
+import shlex
+import subprocess
 import traceback
 import webbrowser
 
@@ -379,7 +381,19 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             return
 
         window = view.window()
-
+        
+        if not single_line:
+            self.clear_regions(view)
+            
+        # TRY
+        _v = window.extract_variables()
+        filename = _v.get('file', '').replace('\\', '/')
+        if filename:
+            if self.is_file_ignored(filename):
+                logger.info("File is ignored.")
+                return
+        # DONE
+        
         self.lazy_initialize()
 
         logger.debug("analyze_current_view()")
@@ -1019,9 +1033,34 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                                                              max_width=max_width,
                                                              max_height=max_height,
                                                              on_navigate=on_navigate,
-                                                             on_hide=on_hide), repeat_duration_ms)
+                                                             on_hide=on_hide), repeat_duration_ms)            
+    
+    def is_file_ignored(self, filename):
+        """Check to see if a file (by filename) is ignored from analysis."""
+        global user_settings
+        
+        if not filename:
+            return False
+        
+        if not user_settings.get('ignore_from_gitignore', True):
+            return False
 
-
+        for ignore_pattern in user_settings.get('ignore_files', []):
+            logger.warning("Checking {0}".format(ignore_pattern))
+            if re.match(ignore_pattern, filename, re.IGNORECASE):
+                return True
+        
+        try:
+            cwd = os.path.dirname(filename)
+            filename = shlex.quote(filename)
+            output = subprocess.check_output("git check-ignore --no-index {0}; exit 0;".format(filename), 
+                                             cwd=cwd, stderr=subprocess.STDOUT, shell=True)
+            return filename in output.decode('utf-8')
+        except Exception as msg:
+            logger.warning("Error checking if file is ignored: {0}".format(msg))
+            
+        return False
+        
 class ReplaceTextCommand(sublime_plugin.TextCommand):
     """Simple function to route text changes to view."""
 
@@ -1063,10 +1102,10 @@ class DevSkimReloadRulesCommand(sublime_plugin.TextCommand):
         rules = []
         stylesheet_content = ""
 
-
 def plugin_loaded():
     """Handle the plugin_loaded event from ST3."""
     logger.info('DevSkim plugin_loaded(), Sublime Text v%s' % sublime.version())
+    
 
 
 def plugin_unloaded():
