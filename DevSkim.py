@@ -844,7 +844,15 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                         if self.is_suppressed(rule, line_list):
                             continue    # Don't add the result to the list
 
-                        result_list.append({
+                        # If there are conditions, run them now
+                        context = {
+                            'filename': filename,
+                            'file_contents': file_contents,
+                            'rule': rule,
+                            'pattern': pattern_dict
+                        }
+                        
+                        result_details = {
                             'rule': rule,
                             'match_content': match.group(),
                             'match_region': sublime.Region(start + offset, end + offset),
@@ -852,13 +860,65 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                             'match_end': end + offset,
                             'pattern': orig_pattern_str,
                             'scope_list': scope_list
-                        })
+                        }
+                        
+                        if self.meets_conditions(context, result_details):
+                            result_list.append(result_details)
             else:
                 logger.debug("Not running rule check [force={0}, rule_applies={1}, syntax={2}, ext={3},]".format(
                     force_analyze, rule_applies_to, set(rule_applies_to) & set(syntax_types), extension))
 
         return result_list
 
+    def meets_conditions(self, context, result):
+        """Checks to see if a finding meets specified conditions from the rule."""
+        logger.debug(context)
+        
+        pattern = context.get('pattern')
+        if not pattern:
+            return True     # No pattern means same thing as them all passing.
+            
+        conditions = pattern.get('conditions')
+        if not conditions:
+            return True     # No conditions means same as them all passing.
+        
+        match_start = result.get('match_start')
+        line = self.view.substr(self.view.line(match_start))
+        
+        if not line:
+            logger.error('No line was found in meets_conditions')
+            return True     # No line means something is broken
+        
+        def _line_match_all(line, targets):
+            logger.debug('_line_match_all({0}, {1})'.format(line, targets))
+            
+            line = line.lower()
+            return all([t.lower() in line for t in targets])
+        
+        def _line_match_any(line, targets):
+            line = line.lower()
+            return any([t.lower() in line for t in targets])
+            
+        logger.debug('Found {0} conditions'.format(len(conditions)))
+        
+        result = True
+        
+        for condition in conditions:
+            name = condition.get('name')
+            value = condition.get('value')
+            invert = condition.get('invert', False)
+            
+            if name == 'line-match-all':
+                r = _line_match_all(line, value)
+                result &= not r if invert else r
+            elif name == 'line-match-any':
+                r = _line_match_any(line, value)
+                result &= not r if invert else r
+            else:
+                logger.warning('Invalid condition name: {0}'.format(name))
+        
+        return result
+        
     def severity_abbreviation(self, severity):
         """Convert a severity name into an abbreviation."""
         if severity is None:
