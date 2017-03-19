@@ -213,6 +213,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
         # Open a regular URL in the user's web browser
         if re.match("^https?://", command, re.IGNORECASE):
             webbrowser.open_new(command)
+            return
 
         # Special commands, intercept and perform the fix
         if command.startswith('#fixit'):
