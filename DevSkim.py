@@ -637,8 +637,8 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                 logger.warning("Error suppressing rules for %s: %s" %
                                (rule_id, msg))
 
-        # Only include active rules -- if 'active' is not specified, assume True
-        rules = list(filter(lambda x: x.get('active', True), rules))
+        # Only include non-disabled rules -- if 'disabled' is not specified, assume False
+        rules = list(filter(lambda x: not x.get('disabled', False), rules))
 
         # Filter by tags, if specified, convert all to lowercase
         show_only_tags = set([k.lower().strip()
