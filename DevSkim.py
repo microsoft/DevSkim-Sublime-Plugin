@@ -12,6 +12,8 @@ import logging
 import re
 import time
 import os
+import shlex
+import subprocess
 import traceback
 import webbrowser
 
@@ -213,6 +215,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
         # Open a regular URL in the user's web browser
         if re.match("^https?://", command, re.IGNORECASE):
             webbrowser.open_new(command)
+            return
 
         # Special commands, intercept and perform the fix
         if command.startswith('#fixit'):
@@ -341,6 +344,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                 self.analyze_current_view(view, show_popup=False, single_line=True)
             except Exception as msg:
                 logger.warning("Error analyzing current view: %s", msg)
+                traceback.print_exc()
 
     def on_load_async(self, view):
         """Handle asynchronous loading event."""
@@ -352,6 +356,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                 self.analyze_current_view(view, show_popup=False)
             except Exception as msg:
                 logger.warning("Error analyzing current view: %s", msg)
+                traceback.print_exc()
 
     def on_post_save_async(self, view):
         """Handle post-save events."""
@@ -365,6 +370,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                 self.analyze_current_view(view)
             except Exception as msg:
                 logger.warning("Error analyzing current view: %s", msg)
+                traceback.print_exc()
 
     def analyze_current_view(self, view, show_popup=True, single_line=False):
         """Kick off the analysis."""
@@ -375,7 +381,19 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             return
 
         window = view.window()
-
+        
+        if not single_line:
+            self.clear_regions(view)
+            
+        # TRY
+        _v = window.extract_variables()
+        filename = _v.get('file', '').replace('\\', '/')
+        if filename:
+            if self.is_file_ignored(filename):
+                logger.info("File is ignored.")
+                return
+        # DONE
+        
         self.lazy_initialize()
 
         logger.debug("analyze_current_view()")
@@ -638,8 +656,8 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                 logger.warning("Error suppressing rules for %s: %s" %
                                (rule_id, msg))
 
-        # Only include active rules -- if 'active' is not specified, assume True
-        rules = list(filter(lambda x: x.get('active', True), rules))
+        # Only include non-disabled rules -- if 'disabled' is not specified, assume False
+        rules = list(filter(lambda x: not x.get('disabled', False), rules))
 
         # Filter by tags, if specified, convert all to lowercase
         show_only_tags = set([k.lower().strip()
@@ -847,7 +865,15 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                         if self.is_suppressed(rule, line_list):
                             continue    # Don't add the result to the list
 
-                        result_list.append({
+                        # If there are conditions, run them now
+                        context = {
+                            'filename': filename,
+                            'file_contents': file_contents,
+                            'rule': rule,
+                            'pattern': pattern_dict
+                        }
+                        
+                        result_details = {
                             'rule': rule,
                             'match_content': match.group(),
                             'match_region': sublime.Region(start + offset, end + offset),
@@ -855,13 +881,65 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                             'match_end': end + offset,
                             'pattern': orig_pattern_str,
                             'scope_list': scope_list
-                        })
+                        }
+                        
+                        if self.meets_conditions(context, result_details):
+                            result_list.append(result_details)
             else:
                 logger.debug("Not running rule check [force={0}, rule_applies={1}, syntax={2}, ext={3},]".format(
                     force_analyze, rule_applies_to, set(rule_applies_to) & set(syntax_types), extension))
 
         return result_list
 
+    def meets_conditions(self, context, result):
+        """Checks to see if a finding meets specified conditions from the rule."""
+        logger.debug(context)
+        
+        pattern = context.get('pattern')
+        if not pattern:
+            return True     # No pattern means same thing as them all passing.
+            
+        conditions = pattern.get('conditions')
+        if not conditions:
+            return True     # No conditions means same as them all passing.
+        
+        match_start = result.get('match_start')
+        line = self.view.substr(self.view.line(match_start))
+        
+        if not line:
+            logger.error('No line was found in meets_conditions')
+            return True     # No line means something is broken
+        
+        def _line_match_all(line, targets):
+            logger.debug('_line_match_all({0}, {1})'.format(line, targets))
+            
+            line = line.lower()
+            return all([t.lower() in line for t in targets])
+        
+        def _line_match_any(line, targets):
+            line = line.lower()
+            return any([t.lower() in line for t in targets])
+            
+        logger.debug('Found {0} conditions'.format(len(conditions)))
+        
+        result = True
+        
+        for condition in conditions:
+            name = condition.get('name')
+            value = condition.get('value')
+            invert = condition.get('invert', False)
+            
+            if name == 'line-match-all':
+                r = _line_match_all(line, value)
+                result &= not r if invert else r
+            elif name == 'line-match-any':
+                r = _line_match_any(line, value)
+                result &= not r if invert else r
+            else:
+                logger.warning('Invalid condition name: {0}'.format(name))
+        
+        return result
+        
     def severity_abbreviation(self, severity):
         """Convert a severity name into an abbreviation."""
         if severity is None:
@@ -959,9 +1037,34 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                                                              max_width=max_width,
                                                              max_height=max_height,
                                                              on_navigate=on_navigate,
-                                                             on_hide=on_hide), repeat_duration_ms)
+                                                             on_hide=on_hide), repeat_duration_ms)            
+    
+    def is_file_ignored(self, filename):
+        """Check to see if a file (by filename) is ignored from analysis."""
+        global user_settings
+        
+        if not filename:
+            return False
+        
+        if not user_settings.get('ignore_from_gitignore', True):
+            return False
 
-
+        for ignore_pattern in user_settings.get('ignore_files', []):
+            logger.warning("Checking {0}".format(ignore_pattern))
+            if re.match(ignore_pattern, filename, re.IGNORECASE):
+                return True
+        
+        try:
+            cwd = os.path.dirname(filename)
+            filename = shlex.quote(filename)
+            output = subprocess.check_output("git check-ignore --no-index {0}; exit 0;".format(filename), 
+                                             cwd=cwd, stderr=subprocess.STDOUT, shell=True)
+            return filename in output.decode('utf-8')
+        except Exception as msg:
+            logger.warning("Error checking if file is ignored: {0}".format(msg))
+            
+        return False
+        
 class ReplaceTextCommand(sublime_plugin.TextCommand):
     """Simple function to route text changes to view."""
 
@@ -991,6 +1094,7 @@ class DevSkimAnalyzeCommand(sublime_plugin.TextCommand):
             devskim_event_listener.analyze_current_view(self.view)
         except Exception as msg:
             logger.warning("Error analyzing current view: %s" % msg)
+            traceback.print_exc()
 
 
 class DevSkimReloadRulesCommand(sublime_plugin.TextCommand):
@@ -1002,10 +1106,10 @@ class DevSkimReloadRulesCommand(sublime_plugin.TextCommand):
         rules = []
         stylesheet_content = ""
 
-
 def plugin_loaded():
     """Handle the plugin_loaded event from ST3."""
     logger.info('DevSkim plugin_loaded(), Sublime Text v%s' % sublime.version())
+    
 
 
 def plugin_unloaded():
