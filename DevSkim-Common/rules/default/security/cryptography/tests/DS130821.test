@@ -1,2 +1,4 @@
-requests.get('https://kennethreitz.com',
-             verify=False)
+requests.post('https://kennethreitz.com', 
+					verify = True)
+
+requests.head('https://kennethreitz.com', verify = False)
