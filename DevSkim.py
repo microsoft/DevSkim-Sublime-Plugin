@@ -441,6 +441,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
         # rule['overrides'] logic
         overrides_list = []
 
+        # This is a bug -- how should we handle this?
         for result in result_list:
             if 'overrides' in result['rule']:
                 overrides_list += result['rule']['overrides']
@@ -751,6 +752,8 @@ class DevSkimEventListener(sublime_plugin.EventListener):
         logger.debug("execute([len=%d], [name=%s], [ext=%s], [syntax=%s], [force=%s], [offset=%d])" %
                      (len(file_contents), filename, extension, syntax, force_analyze, offset))
 
+        filename_basename = os.path.basename(filename).strip()
+
         if not file_contents:
             return []
 
@@ -779,6 +782,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             rule_applies_to = rule.get('applies_to', [])
             if (force_analyze or
                     not rule_applies_to or
+                    filename_basename in rule_applies_to or
                     set(rule_applies_to) & set(syntax_types) or
                     '.%s' % extension in rule_applies_to):
 
