@@ -25,6 +25,8 @@ except:
     import sys
     sys.exit(1)
 
+from . import DevSkimConditionals
+
 # Non-Configurable Settings
 MIN_ST_VERSION = 3114
 MARK_FLAGS = sublime.DRAW_NO_FILL | sublime.HIDE_ON_MINIMAP
@@ -92,6 +94,9 @@ stylesheet_content = ""
 
 # Cache suppress days
 suppress_days = []
+
+# Conditional Functions
+conditional_func_map = {}
 
 class DevSkimEventListener(sublime_plugin.EventListener):
     """Handles events from Sublime Text."""
@@ -161,6 +166,12 @@ class DevSkimEventListener(sublime_plugin.EventListener):
 
             logger.handlers = []
             logger.addHandler(console)
+
+        # Initialize the conditionals
+        for func in dir(DevSkimConditionals):
+            if func.startswith('condition__'):
+                func_short = func.replace('condition__', '')
+                conditional_func_map[func_short] = getattr(DevSkimConditionals, func)
 
     def clear_regions(self, view):
         """Clear all regions."""
@@ -390,10 +401,10 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             return
 
         window = view.window()
-        
+
         if not single_line:
             self.clear_regions(view)
-            
+
         # TRY
         _v = window.extract_variables()
         filename = _v.get('file', '').replace('\\', '/')
@@ -402,7 +413,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                 logger.info("File is ignored.")
                 return
         # DONE
-        
+
         self.lazy_initialize()
 
         logger.debug("analyze_current_view()")
@@ -1111,7 +1122,7 @@ class DevSkimReloadRulesCommand(sublime_plugin.TextCommand):
 def plugin_loaded():
     """Handle the plugin_loaded event from ST3."""
     logger.info('DevSkim plugin_loaded(), Sublime Text v%s' % sublime.version())
-    
+
 
 
 def plugin_unloaded():
