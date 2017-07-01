@@ -1,5 +1,5 @@
 """
-Copyright (c) 2016 Microsoft. All rights reserved.
+Copyright (c) 2017 Microsoft. All rights reserved.
 Licensed under the MIT License. See LICENSE.txt in the project root for license information.
 
 DevSkim Sublime Text Plugin
@@ -175,11 +175,9 @@ class DevSkimEventListener(sublime_plugin.EventListener):
 
     def on_selection_modified(self, view):
         """Handle selection change events."""
-        self.lazy_initialize()
-
-        # logger.debug("on_selection_modified()")
-
         global marked_regions, finding_list
+
+        self.lazy_initialize()
 
         try:
             # Get the current region (cursor start)
@@ -240,7 +238,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
 
                 fixit = fixit[fixid]
                 if not fixit:
-                    logger.warn("Tried to apply fixit #{0}, but was not found in dict.".format(fixid))
+                    logger.warn("Tried to apply fixit #{%s}, but was not found in dict.", fixid)
                     continue
 
                 if fixit['type'] == 'regex-substitute':
@@ -254,7 +252,6 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                     result = re.sub(search, replace, contents, flags=flags)
                     logger.debug("Result of search/replace was [%s]", result)
 
-                    self.view.replace
                     self.view.run_command('replace_text', {
                         'a': region_start,
                         'b': region_end,
@@ -275,7 +272,15 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             cur_line = self.view.line(int(region_start))
 
             comment = "  DevSkim: reviewed %s on %s " % (rule_id, datetime.datetime.now().strftime("%Y-%m-%d"))
+
             username = user_settings.get('manual_reviewer_name', '')
+            if username == '':
+                try:
+                    import getpass
+                    username = getpass.getuser()
+                except:
+                    pass
+
             if username:
                 comment += "by {0} ".format(username)
 
@@ -337,6 +342,10 @@ class DevSkimEventListener(sublime_plugin.EventListener):
     def on_modified(self, view):
         """Handle immedate analysis (on keypress)."""
         global user_settings
+
+        # if view.change_count() % 10 != 0:
+        #    return
+
         self.lazy_initialize()
 
         if user_settings.get('show_highlights_on_modified', False):
@@ -511,8 +520,8 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             severity = rule.get('severity', 'informational')
             severity = self.severity_abbreviation(severity).upper()
 
-            shown_finding_list.append([rule.get("name"), "%d: [%s] %s" %
-                                       (region[0] + 1, severity,
+            shown_finding_list.append([rule.get("name"), "%d: %s" %
+                                       (region[0] + 1, 
                                        view.substr(view.line(region_start)).strip())])
 
         if show_popup:
@@ -872,7 +881,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                             'rule': rule,
                             'pattern': pattern_dict
                         }
-                        
+
                         result_details = {
                             'rule': rule,
                             'match_content': match.group(),
@@ -882,7 +891,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                             'pattern': orig_pattern_str,
                             'scope_list': scope_list
                         }
-                        
+
                         if self.meets_conditions(context, result_details):
                             result_list.append(result_details)
             else:
@@ -893,53 +902,46 @@ class DevSkimEventListener(sublime_plugin.EventListener):
 
     def meets_conditions(self, context, result):
         """Checks to see if a finding meets specified conditions from the rule."""
-        logger.debug(context)
-        
         pattern = context.get('pattern')
         if not pattern:
             return True     # No pattern means same thing as them all passing.
-            
+
         conditions = pattern.get('conditions')
         if not conditions:
             return True     # No conditions means same as them all passing.
-        
+
         match_start = result.get('match_start')
         line = self.view.substr(self.view.line(match_start))
-        
+
         if not line:
             logger.error('No line was found in meets_conditions')
             return True     # No line means something is broken
-        
-        def _line_match_all(line, targets):
-            logger.debug('_line_match_all({0}, {1})'.format(line, targets))
-            
-            line = line.lower()
-            return all([t.lower() in line for t in targets])
-        
-        def _line_match_any(line, targets):
-            line = line.lower()
-            return any([t.lower() in line for t in targets])
-            
-        logger.debug('Found {0} conditions'.format(len(conditions)))
-        
-        result = True
-        
+
+        logger.debug('Found %d conditions', len(conditions))
+
+        cond_result = True
+
         for condition in conditions:
-            name = condition.get('name')
+            name = condition.get('name', '').replace('-', '_')
             value = condition.get('value')
             invert = condition.get('invert', False)
-            
-            if name == 'line-match-all':
-                r = _line_match_all(line, value)
-                result &= not r if invert else r
-            elif name == 'line-match-any':
-                r = _line_match_any(line, value)
-                result &= not r if invert else r
+
+            if name in conditional_func_map:
+                kwargs = {
+                    'view': self.view,
+                    'line': line,
+                    'value': value
+                }
+                kwargs.update(context)
+                kwargs.update(result)
+
+                r = conditional_func_map[name](**kwargs)
+                cond_result &= not r if invert else r
             else:
-                logger.warning('Invalid condition name: {0}'.format(name))
-        
-        return result
-        
+                logger.warning('Invalid condition name: %s', name)
+
+        return cond_result
+
     def severity_abbreviation(self, severity):
         """Convert a severity name into an abbreviation."""
         if severity is None:
@@ -989,7 +991,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                         try:
                             suppress_until = datetime.datetime.strptime(suppress_until, '%Y-%m-%d')
                             if datetime.date.today() < suppress_until.date():
-                                logger.debug('Ignoring rule [%s] due to limited suppression.', rule.get('id'))
+                                logger.debug('Ignoring rule [%s], limited suppression.', rule.get('id'))
                                 return True
                         except Exception as msg:
                             logger.debug("Error parsing suppression date 1: %s", msg)
@@ -1003,14 +1005,14 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                     try:
                         suppress_until = datetime.datetime.strptime(suppress_until, '%Y-%m-%d')
                         if datetime.date.today() < suppress_until.date():
-                            logger.debug('Ignoring rule [%s] due to global suppression.', rule.get('id'))
+                            logger.debug('Ignoring rule [%s] global suppression.', rule.get('id'))
                             return True
                     except Exception as msg:
                         logger.debug("Error parsing suppression date 2: %s", msg)
 
             if rule.get('severity') == 'manual-review':
                 if re.search(r'reviewed ([^\s]+)\s*(?!\s+on \d{4}-\d{2}-\d{2})', line):
-                    logger.debug('Ignoring rule [%s] due to manual review complete.', rule.get('id'))
+                    logger.debug('Ignoring rule [%s], manual review complete.', rule.get('id'))
                     return True
 
         return False
@@ -1037,15 +1039,15 @@ class DevSkimEventListener(sublime_plugin.EventListener):
                                                              max_width=max_width,
                                                              max_height=max_height,
                                                              on_navigate=on_navigate,
-                                                             on_hide=on_hide), repeat_duration_ms)            
-    
+                                                             on_hide=on_hide), repeat_duration_ms)
+
     def is_file_ignored(self, filename):
         """Check to see if a file (by filename) is ignored from analysis."""
         global user_settings
-        
+
         if not filename:
             return False
-        
+
         if not user_settings.get('ignore_from_gitignore', True):
             return False
 
@@ -1053,18 +1055,18 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             logger.warning("Checking {0}".format(ignore_pattern))
             if re.match(ignore_pattern, filename, re.IGNORECASE):
                 return True
-        
+
         try:
             cwd = os.path.dirname(filename)
             filename = shlex.quote(filename)
-            output = subprocess.check_output("git check-ignore --no-index {0}; exit 0;".format(filename), 
+            output = subprocess.check_output("git check-ignore --no-index {0}; exit 0;".format(filename),
                                              cwd=cwd, stderr=subprocess.STDOUT, shell=True)
             return filename in output.decode('utf-8')
         except Exception as msg:
             logger.warning("Error checking if file is ignored: {0}".format(msg))
-            
+
         return False
-        
+
 class ReplaceTextCommand(sublime_plugin.TextCommand):
     """Simple function to route text changes to view."""
 
