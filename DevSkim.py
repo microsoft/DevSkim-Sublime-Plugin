@@ -787,7 +787,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
         """Execute all of the rules against a given string of text."""
         global rules, applies_to_ext_mapping
 
-        logger.debug("execute([len=%d], [name=%s], [ext=%s], [syntax=%s], [force=%s], [offset=%d])" %
+        logger.warning("execute([len=%d], [name=%s], [ext=%s], [syntax=%s], [force=%s], [offset=%d])" %
                      (len(file_contents), filename, extension, syntax, force_analyze, offset))
 
         filename_basename = os.path.basename(filename).strip()
