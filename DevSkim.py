@@ -1058,20 +1058,31 @@ class DevSkimEventListener(sublime_plugin.EventListener):
         if not filename:
             return False
 
-        if not user_settings.get('ignore_from_gitignore', True):
-            return False
-
         for ignore_pattern in user_settings.get('ignore_files', []):
             logger.warning("Checking {0}".format(ignore_pattern))
             if re.match(ignore_pattern, filename, re.IGNORECASE):
                 return True
 
+        if not user_settings.get('ignore_from_gitignore', True):
+            return False
+
         try:
+            if os.name == 'nt':
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            else:
+                startupinfo = subprocess.STARTUPINFO()
+
             cwd = os.path.dirname(filename)
             filename = shlex.quote(filename)
-            output = subprocess.check_output("git check-ignore --no-index {0}; exit 0;".format(filename),
-                                             cwd=cwd, stderr=subprocess.STDOUT, shell=True)
+            output = subprocess.check_output(["git", "check-ignore", "--no-index", filename],
+                                             cwd=cwd, stderr=subprocess.STDOUT, shell=False,
+                                             startupinfo=startupinfo,
+                                             creationflags=subprocess.SW_HIDE)
             return filename in output.decode('utf-8')
+        except subprocess.CalledProcessError as msg:
+            # This is OK, just catching non-zero errorlevel
+            return filename in msg.output.decode('utf-8')
         except Exception as msg:
             logger.warning("Error checking if file is ignored: {0}".format(msg))
 
@@ -1097,13 +1108,16 @@ class InsertTextCommand(sublime_plugin.TextCommand):
 class DevSkimAnalyzeCommand(sublime_plugin.TextCommand):
     """Perform an ad-hoc analysis of the open file."""
 
-    def run(self, text):
+    def run(self, edit_token, **args):
         """Execute the analysis."""
         global devskim_event_listener
+        logger.debug("DevSkimAnalyzeCommand invoked.")
+
         if not devskim_event_listener:
             devskim_event_listener = DevSkimEventListener()
         try:
-            devskim_event_listener.analyze_current_view(self.view)
+            show_popup = args.get('show_popup', True)
+            devskim_event_listener.analyze_current_view(self.view, show_popup=show_popup)
         except Exception as msg:
             logger.warning("Error analyzing current view: %s" % msg)
             traceback.print_exc()
