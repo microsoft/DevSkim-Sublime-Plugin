@@ -396,6 +396,9 @@ class DevSkimEventListener(sublime_plugin.EventListener):
         """Kick off the analysis."""
         global marked_regions, finding_list, user_settings
 
+        logger.debug("analyze_current_view()")
+        self.lazy_initialize()
+
         if view is None or view.window() is None:
             # Early abort if we don't have a View and Window
             return
@@ -405,18 +408,10 @@ class DevSkimEventListener(sublime_plugin.EventListener):
         if not single_line:
             self.clear_regions(view)
 
-        # TRY
-        _v = window.extract_variables()
-        filename = _v.get('file', '').replace('\\', '/')
-        if filename:
-            if self.is_file_ignored(filename):
-                logger.info("File is ignored.")
-                return
-        # DONE
-
-        self.lazy_initialize()
-
-        logger.debug("analyze_current_view()")
+        filename = window.extract_variables().get('file', '').replace('\\', '/')
+        if filename and self.is_file_ignored(filename):
+            logger.debug("File is ignored.")
+            return
 
         # Time the execution of this function
         start_time = time.clock()
@@ -518,11 +513,13 @@ class DevSkimEventListener(sublime_plugin.EventListener):
         shown_finding_list = []
 
         # Sort the findings
-        sort_by = user_settings.get('sort_results_by', 'line_number')
-        if sort_by == 'severity':
-            finding_list.sort(key=lambda s: SEVERITY_LIST.index(s.get('rule').get('severity')))
-        elif sort_by == 'line_number':
-            finding_list.sort(key=lambda s: view.rowcol(s.get('match_region').begin())[0])
+        if len(marked_regions) > 0:
+            sort_by = user_settings.get('sort_results_by', 'line_number')
+            if sort_by == 'severity':
+                finding_list.sort(key=lambda s: SEVERITY_LIST.index(s.get('rule').get('severity')))
+            elif sort_by == 'line_number':
+                finding_list.sort(key=lambda s: view.rowcol(s.get('match_region').begin())[0])
+            logger.debug("Findings have been sorted.")
 
         for finding in finding_list:
             rule = finding.get('rule')
@@ -534,6 +531,8 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             shown_finding_list.append([rule.get("name"), "%d: %s" %
                                        (region[0] + 1, 
                                        view.substr(view.line(region_start)).strip())])
+        
+        logger.debug("shown_findings_list has been created.")
 
         if show_popup:
             window.show_quick_panel(shown_finding_list, self.on_selected_result)
