@@ -98,6 +98,7 @@ suppress_days = []
 # Conditional Functions
 conditional_func_map = {}
 
+
 class DevSkimEventListener(sublime_plugin.EventListener):
     """Handles events from Sublime Text."""
 
@@ -1132,11 +1133,26 @@ class DevSkimReloadRulesCommand(sublime_plugin.TextCommand):
         rules = []
         stylesheet_content = ""
 
+def periodic_analysis_callback():
+    try:
+        view = sublime.active_window().active_view()
+        view.run_command("dev_skim_analyze", args={'show_popup': False})
+        frequency = sublime.load_settings('DevSkim.sublime-settings').get('show_highlights_on_time', 0)
+        # Re-evaluate this so changes are picked up if the user changes their config.
+        if frequency > 0:
+            sublime.set_timeout_async(periodic_analysis_callback, frequency)
+
+    except Exception as msg:
+        print("Error: {0}".format(msg))
+
 def plugin_loaded():
     """Handle the plugin_loaded event from ST3."""
     logger.info('DevSkim plugin_loaded(), Sublime Text v%s' % sublime.version())
 
-
+    # Schedule analysis based on configuration
+    frequency = sublime.load_settings('DevSkim.sublime-settings').get('show_highlights_on_time', 0)
+    if frequency > 0:
+        sublime.set_timeout_async(periodic_analysis_callback, frequency)
 
 def plugin_unloaded():
     """Handle the plugin_unloaded event from ST3."""

@@ -38,7 +38,10 @@
   "show_findings_on_save": true,
 
   /* Run analysis whenever a file is changed. */
-  "show_highlights_on_modified": true,
+  "show_highlights_on_modified": false,
+
+  /* Run analysis on a specific timer, in milliseconds, 0=disabled */
+  "show_highlights_on_time": 10000,
 
   /* Enable per-rule suppressions */
   "allow_suppress_specific_rules": true,
