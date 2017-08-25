@@ -20,7 +20,7 @@ import webbrowser
 try:
     import sublime
     import sublime_plugin
-except:
+except Exception as _:
     print("Unable to import Sublime Text modules. DevSkim must be run within Sublime Text.")
     import sys
     sys.exit(1)
@@ -488,17 +488,17 @@ class DevSkimEventListener(sublime_plugin.EventListener):
 
         if original_result_list_count > len(result_list):
             logger.debug("Reduced result list from [%d] to [%d] by overriding rules",
-                         (original_result_list_count, len(result_list)))
+                         original_result_list_count, len(result_list))
 
         for result in result_list:
             # Narrow down to just the matching part of the line
             scope_name = view.scope_name(result.get('match_region').begin())
 
             scope_list = ["%s." % s for s in result.get('scope_list')]
-            logger.debug("Current Scope: [%s], Applies to: %s" % (scope_name, scope_list))
+            logger.debug("Current Scope: [%s], Applies to: %s", scope_name, scope_list)
 
             # Don't actually include if we're in a comment, or a quoted string, etc.
-            if any([x in scope_name for x in scope_list]) or len(scope_list) == 0:
+            if any([x in scope_name for x in scope_list]) or not scope_list:
                 marked_regions.append(result.get('match_region'))
                 finding_list.append(result)
 
@@ -787,7 +787,7 @@ class DevSkimEventListener(sublime_plugin.EventListener):
         """Execute all of the rules against a given string of text."""
         global rules, applies_to_ext_mapping
 
-        logger.warning("execute([len=%d], [name=%s], [ext=%s], [syntax=%s], [force=%s], [offset=%d])" %
+        logger.debug("execute([len=%d], [name=%s], [ext=%s], [syntax=%s], [force=%s], [offset=%d])" %
                      (len(file_contents), filename, extension, syntax, force_analyze, offset))
 
         filename_basename = os.path.basename(filename).strip()
@@ -1069,23 +1069,26 @@ class DevSkimEventListener(sublime_plugin.EventListener):
 
         try:
             if os.name == 'nt':
+                # Only supported on Windows
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                creationflags = subprocess.SW_HIDE
             else:
-                startupinfo = subprocess.STARTUPINFO()
+                startupinfo = None
+                creationflags = 0
 
             cwd = os.path.dirname(filename)
             filename = shlex.quote(filename)
             output = subprocess.check_output(["git", "check-ignore", "--no-index", filename],
                                              cwd=cwd, stderr=subprocess.STDOUT, shell=False,
                                              startupinfo=startupinfo,
-                                             creationflags=subprocess.SW_HIDE)
+                                             creationflags=creationflags)
             return filename in output.decode('utf-8')
         except subprocess.CalledProcessError as msg:
             # This is OK, just catching non-zero errorlevel
             return filename in msg.output.decode('utf-8')
         except Exception as msg:
-            logger.warning("Error checking if file is ignored: {0}".format(msg))
+            logger.warning("Error checking if file is ignored: %s", msg)
 
         return False
 
