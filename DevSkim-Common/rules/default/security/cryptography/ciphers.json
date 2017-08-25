@@ -1,0 +1,153 @@
+[
+    {
+        "name": "Do not use the mcrypt module, use OpenSSL instead.",
+        "id": "DS175862",
+        "description": "The PHP mcrypt module is based on libmcrypt, which has been abanonded since 2007.",
+        "recommendation": "OpenSSL",
+        "applies_to": [
+            "php"
+        ],
+        "tags": [
+            "Cryptography.Library.Abandoned"
+        ],
+        "severity": "moderate",
+        "_comment": "",
+        "rule_info": "DS175862.md",
+        "patterns": [
+            {
+                "pattern": "mcrypt",
+                "type": "string",
+                "scopes": [
+                    "code"
+                ],
+                "_comment": ""
+            }
+        ]
+    },
+    {
+        "name": "Do not use the 3DES symmetric block cipher.",
+        "id": "DS109501",
+        "description": "The 3DES cipher was found, which is only secure if three independent keys are used.",
+        "recommendation": "Use AES instead.",
+        "overrides": [
+            "DS106864"
+        ],
+        "applies_to": [
+            "csharp"
+        ],
+        "tags": [
+            "Cryptography.Symmetric.PotentiallyWeakAlgorithm"
+        ],
+        "severity": "moderate",
+        "_comment": "",
+        "rule_info": "DS109501.md",
+        "patterns": [
+            {
+                "pattern": "TripleDESCryptoServiceProvider",
+                "type": "string",
+                "scopes": [
+                    "code"
+                ],
+                "_comment": ""
+            }
+        ],
+        "fix_its": [
+            {
+                "name": "Change to AESCryptoServiceProvider",
+                "type": "regex-replace",
+                "_comment": "",
+                "replacement": "AESCryptoServiceProvider",
+                "pattern": {
+                    "pattern": "TripleDESCryptoServiceProvider",
+                    "type": "regex",
+                    "scopes": [
+                        "code"
+                    ],
+                    "_comment": ""
+                }
+            }
+        ]
+    },
+    {
+        "name": "Do not use the DES symmetric block cipher.",
+        "id": "DS106864",
+        "description": "The DES cipher was found, which is widely considered to be broken.",
+        "recommendation": "Use AES instead.",
+        "applies_to": [
+            "csharp"
+        ],
+        "tags": [
+            "Cryptography.Symmetric.WeakOrBrokenAlgorithm"
+        ],
+        "severity": "critical",
+        "_comment": "",
+        "rule_info": "DS106864.md",
+        "patterns": [
+            {
+                "pattern": "DESCryptoServiceProvider",
+                "type": "string",
+                "scopes": [
+                    "code"
+                ],
+                "_comment": ""
+            }
+        ],
+        "fix_its": [
+            {
+                "name": "Change to AESCryptoServiceProvider",
+                "type": "regex-replace",
+                "_comment": "",
+                "replacement": "AESCryptoServiceProvider",
+                "pattern": {
+                    "pattern": "DESCryptoServiceProvider",
+                    "type": "regex",
+                    "scopes": [
+                        "code"
+                    ],
+                    "_comment": ""
+                }
+            }
+        ]
+    },
+    {
+        "name": "Do not use the RC2 symmetric block cipher.",
+        "id": "DS156431",
+        "description": "The RC2 cipher was found, which is considered to be broken.",
+        "recommendation": "Use AES instead.",
+        "applies_to": [
+            "csharp"
+        ],
+        "tags": [
+            "Cryptography.Symmetric.WeakOrBrokenAlgorithm"
+        ],
+        "severity": "critical",
+        "_comment": "",
+        "rule_info": "DS156431.md",
+        "patterns": [
+            {
+                "pattern": "RC2CryptoServiceProvider",
+                "type": "string",
+                "scopes": [
+                    "code"
+                ],
+                "_comment": ""
+            }
+        ],
+        "fix_its": [
+            {
+                "name": "Change to AESCryptoServiceProvider",
+                "type": "regex-replace",
+                "_comment": "",
+                "replacement": "AESCryptoServiceProvider",
+                "pattern": {
+                    "pattern": "RC2CryptoServiceProvider",
+                    "type": "regex",
+                    "scopes": [
+                        "code"
+                    ],
+                    "_comment": ""
+                }
+            }
+        ]
+    }
+]
