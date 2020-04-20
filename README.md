@@ -1,14 +1,17 @@
-DevSkim Plugin for Sublime Text
-===============================
+# DevSkim Sublime Plugin Deprecated
+
+The DevSkim Sublime plugin has been deprecated. Original source code will continue to be available at this location, but no longer maintained.
+
+The core DevSkim project and supported plugins for Visual Studio and VSCode are available at [https://github.com/microsoft/devskim](https://github.com/microsoft/devskim).
+
+--------------
+--------------
+
+
+## DevSkim Plugin for Sublime Text
 
 The plugin implements a security linter within the Sublime Text editor, leveraging the rules from the [DevSkim](https://github.com/Microsoft/DevSkim)
 repository. It helps software engineers to write secure code by flagging potentially dangerous calls, and gives in-context advice for remediation.
-
-### PUBLIC PREVIEW
-
-DevSkim is currently in *public preview*. We're looking forward to working with the community
-to improve both the scanning engines and rules over the next few months, and welcome your feedback
-and contributions!
 
 ![DevSkim Demo](https://github.com/Microsoft/DevSkim-Sublime-Plugin/raw/master/doc/DevSkim-Sublime-Demo-1.gif)
 
@@ -91,10 +94,3 @@ apply the rule to, and, optionally, a list of possible code fixes.
 Information how writing rules can be found at
 [Writing-Rules](https://github.com/Microsoft/DevSkim/wiki/Writing-Rules)
 
-Reporting Issues
-----------------
-Please see [CONTRIBUTING](https://github.com/Microsoft/DevSkim-Sublime-Plugin/blob/master/CONTRIBUTING.md) for information on reporting issues and contributing code.
-
-Tips and Known Issues
----------------------
-See tips and known issues in the [wiki page](https://github.com/Microsoft/DevSkim-Sublime-Plugin/wiki/Tips-and-Known-Issues).
