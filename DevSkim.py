@@ -7,6 +7,7 @@ https://github.com/Microsoft/DevSkim-Sublime-Plugin
 """
 
 import datetime
+import fnmatch
 import json
 import logging
 import re
@@ -530,9 +531,9 @@ class DevSkimEventListener(sublime_plugin.EventListener):
             severity = self.severity_abbreviation(severity).upper()
 
             shown_finding_list.append([rule.get("name"), "%d: %s" %
-                                       (region[0] + 1, 
+                                       (region[0] + 1,
                                        view.substr(view.line(region_start)).strip())])
-        
+
         logger.debug("shown_findings_list has been created.")
 
         if show_popup:
@@ -818,9 +819,11 @@ class DevSkimEventListener(sublime_plugin.EventListener):
 
             # No syntax means "match any syntax"
             rule_applies_to = rule.get('applies_to', [])
+            applies_to_check = any([fnmatch.fnmatch(filename_basename, glob_pattern) for glob_pattern in rule_applies_to])
+
             if (force_analyze or
                     not rule_applies_to or
-                    filename_basename in rule_applies_to or
+                    applies_to_check or
                     set(rule_applies_to) & set(syntax_types) or
                     '.%s' % extension in rule_applies_to):
 
